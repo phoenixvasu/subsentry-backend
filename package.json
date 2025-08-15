@@ -1,0 +1,32 @@
+{
+  "name": "subsentry-backend",
+  "version": "1.0.0",
+  "description": "Backend API for SubSentry (Node.js + Express + PostgreSQL)",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/phoenixvasu/subsentry-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/phoenixvasu/subsentry-backend/issues"
+  },
+  "homepage": "https://github.com/phoenixvasu/subsentry-backend#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react": "^7.37.5",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "typescript-eslint": "^8.39.1"
+  }
+}
