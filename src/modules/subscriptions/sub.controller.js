@@ -1,4 +1,4 @@
-import subscriptionService from "./sub.service.js";
+import * as subscriptionRepo from "./sub.repo.js";
 
 class SubscriptionController {
   async create(req, res, next) {
@@ -21,7 +21,7 @@ class SubscriptionController {
         annualized_cost = cost * 4;
       }
 
-      const subscription = await subscriptionService.create({
+      const subscription = await subscriptionRepo.createSubscription(userId, {
         service_name,
         category,
         cost,
@@ -29,7 +29,6 @@ class SubscriptionController {
         auto_renews,
         start_date,
         annualized_cost,
-        userId,
       });
 
       res.status(201).json({
@@ -44,10 +43,34 @@ class SubscriptionController {
   async getAll(req, res, next) {
     try {
       const userId = req.user.id;
-      const subscriptions = await subscriptionService.getAll(userId);
+      const subscriptions = await subscriptionRepo.listSubscriptions(userId);
       res.json({
         message: "Subscriptions fetched successfully",
         data: subscriptions,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getById(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      const subscription = await subscriptionRepo.getSubscriptionById(
+        id,
+        userId
+      );
+
+      if (!subscription) {
+        return res.status(404).json({
+          message: "Subscription not found",
+        });
+      }
+
+      res.json({
+        message: "Subscription fetched successfully",
+        data: subscription,
       });
     } catch (error) {
       next(error);
@@ -76,10 +99,10 @@ class SubscriptionController {
         }
       }
 
-      const subscription = await subscriptionService.update(
+      const subscription = await subscriptionRepo.updateSubscription(
         id,
-        updates,
-        userId
+        userId,
+        updates
       );
       res.json({
         message: "Subscription updated successfully",
@@ -94,7 +117,7 @@ class SubscriptionController {
     try {
       const { id } = req.params;
       const userId = req.user.id;
-      await subscriptionService.delete(id, userId);
+      await subscriptionRepo.deleteSubscription(id, userId);
       res.json({
         message: "Subscription deleted successfully",
       });

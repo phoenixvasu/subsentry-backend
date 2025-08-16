@@ -9,6 +9,7 @@ router.use(requireAuth);
 
 router.post("/", subscriptionController.create);
 router.get("/", subscriptionController.getAll);
+router.get("/:id", subscriptionController.getById);
 router.put("/:id", subscriptionController.update);
 router.delete("/:id", subscriptionController.delete);
 
