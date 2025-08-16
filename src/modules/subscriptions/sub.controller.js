@@ -1,63 +1,107 @@
-const subService = require('./sub.service');
-const { ApplicationError } = require('../../utils/errors');
+import subscriptionService from "./sub.service.js";
 
-const createSubscription = async (req, res, next) => {
-  try {
-    const userId = req.user.sub;
-    const subscription = await subService.createSubscription(userId, req.body);
-    res.status(201).json(subscription);
-  } catch (error) {
-    next(error);
+class SubscriptionController {
+  async create(req, res, next) {
+    try {
+      const {
+        service_name,
+        category,
+        cost,
+        billing_cycle,
+        auto_renews,
+        start_date,
+      } = req.body;
+      const userId = req.user.id;
+
+      // Calculate annualized cost
+      let annualized_cost = cost;
+      if (billing_cycle === "Monthly") {
+        annualized_cost = cost * 12;
+      } else if (billing_cycle === "Quarterly") {
+        annualized_cost = cost * 4;
+      }
+
+      const subscription = await subscriptionService.create({
+        service_name,
+        category,
+        cost,
+        billing_cycle,
+        auto_renews,
+        start_date,
+        annualized_cost,
+        userId,
+      });
+
+      res.status(201).json({
+        message: "Subscription created successfully",
+        data: subscription,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-const updateSubscription = async (req, res, next) => {
-  try {
-    const userId = req.user.sub;
-    const { id } = req.params;
-    const subscription = await subService.updateSubscription(parseInt(id), userId, req.body);
-    res.status(200).json(subscription);
-  } catch (error) {
-    next(error);
+  async getAll(req, res, next) {
+    try {
+      const userId = req.user.id;
+      const subscriptions = await subscriptionService.getAll(userId);
+      res.json({
+        message: "Subscriptions fetched successfully",
+        data: subscriptions,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-const deleteSubscription = async (req, res, next) => {
-  try {
-    const userId = req.user.sub;
-    const { id } = req.params;
-    const result = await subService.deleteSubscription(parseInt(id), userId);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
+  async update(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      const userId = req.user.id;
+
+      // Recalculate annualized cost if billing cycle or cost changes
+      if (updates.cost || updates.billing_cycle) {
+        const cost = updates.cost || req.body.cost;
+        const billing_cycle = updates.billing_cycle || req.body.billing_cycle;
+
+        if (cost && billing_cycle) {
+          let annualized_cost = cost;
+          if (billing_cycle === "Monthly") {
+            annualized_cost = cost * 12;
+          } else if (billing_cycle === "Quarterly") {
+            annualized_cost = cost * 4;
+          }
+          updates.annualized_cost = annualized_cost;
+        }
+      }
+
+      const subscription = await subscriptionService.update(
+        id,
+        updates,
+        userId
+      );
+      res.json({
+        message: "Subscription updated successfully",
+        data: subscription,
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-};
 
-const getSubscriptionById = async (req, res, next) => {
-  try {
-    const userId = req.user.sub;
-    const { id } = req.params;
-    const subscription = await subService.getSubscriptionById(parseInt(id), userId);
-    res.status(200).json(subscription);
-  } catch (error) {
-    next(error);
+  async delete(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+      await subscriptionService.delete(id, userId);
+      res.json({
+        message: "Subscription deleted successfully",
+      });
+    } catch (error) {
+      next(error);
+    }
   }
-};
+}
 
-const listSubscriptions = async (req, res, next) => {
-  try {
-    const userId = req.user.sub;
-    const subscriptions = await subService.listSubscriptions(userId, req.query);
-    res.status(200).json(subscriptions);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = {
-  createSubscription,
-  updateSubscription,
-  deleteSubscription,
-  getSubscriptionById,
-  listSubscriptions,
-};
+export default new SubscriptionController();

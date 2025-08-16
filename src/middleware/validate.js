@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 /**
  * Validates request against a Zod schema.
  *
@@ -7,15 +9,20 @@
 export function validate(schema) {
   return (req, res, next) => {
     try {
-      schema.parse({
-        body: req.body,
-        query: req.query,
-        params: req.params,
-      });
+      const validatedData = schema.parse(req.body);
+      req.body = validatedData;
       next();
-    } catch (err) {
-      return res.status(400).send(err.errors);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })),
+        });
+      }
+      next(error);
     }
   };
 }
-

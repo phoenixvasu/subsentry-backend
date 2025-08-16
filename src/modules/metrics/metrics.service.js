@@ -1,8 +1,8 @@
 // src/modules/metrics/metrics.service.js
-const metricsRepo = require('./metrics.repo');
+import { getMetrics as repoGetMetrics } from "./metrics.repo.js";
 
-async function getMetrics(userId) {
-  const metrics = await metricsRepo.getMetrics(userId);
+export async function getMetrics(userId) {
+  const metrics = await repoGetMetrics(userId);
 
   // Ensure highestSubscription is an object, not null, if no subscriptions exist
   if (!metrics.highestSubscription) {
@@ -21,7 +21,3 @@ async function getMetrics(userId) {
     totalSubscriptions: metrics.totalsubscriptions,
   };
 }
-
-module.exports = {
-  getMetrics,
-};

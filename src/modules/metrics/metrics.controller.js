@@ -1,13 +1,13 @@
 // src/modules/metrics/metrics.controller.js
-const metricsService = require('./metrics.service');
-const { catchAsync } = require('../../utils/errors');
+import { getMetrics as serviceGetMetrics } from "./metrics.service.js";
+import { ApplicationError } from "../../utils/errors.js";
 
-const getMetrics = catchAsync(async (req, res) => {
-  const userId = req.user.id; // Assuming user ID is available from JWT middleware
-  const metrics = await metricsService.getMetrics(userId);
-  res.json(metrics);
-});
-
-module.exports = {
-  getMetrics,
+export const getMetrics = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const metrics = await serviceGetMetrics(userId);
+    res.json(metrics);
+  } catch (error) {
+    next(error);
+  }
 };

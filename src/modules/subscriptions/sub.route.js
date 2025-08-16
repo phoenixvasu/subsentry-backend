@@ -1,16 +1,15 @@
 import express from 'express';
-import subController from './sub.controller.js';
-import authMiddleware from '../../middleware/auth.js';
+import { requireAuth } from '../../middleware/auth.js';
+import subscriptionController from './sub.controller.js';
 
 const router = express.Router();
 
 // All subscription routes require authentication
-router.use(authMiddleware);
+router.use(requireAuth);
 
-router.post('/', subController.createSubscription);
-router.put('/:id', subController.updateSubscription);
-router.delete('/:id', subController.deleteSubscription);
-router.get('/:id', subController.getSubscriptionById);
-router.get('/', subController.listSubscriptions);
+router.post('/', subscriptionController.create);
+router.get('/', subscriptionController.getAll);
+router.put('/:id', subscriptionController.update);
+router.delete('/:id', subscriptionController.delete);
 
 export default router;

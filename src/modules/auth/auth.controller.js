@@ -35,7 +35,8 @@ export async function login(req, res, next) {
         const data = await loginUser(username, password);
         res.status(200).json({
             message: 'Login successful',
-            data,
+            token: data.token,
+            user: data.user,
         });
     } catch (err) {
         next(err);

@@ -1,21 +1,14 @@
+import { z } from "zod";
 
-const { z } = require('zod');
+export const billingCycleEnum = z.enum(["Monthly", "Quarterly", "Yearly"]);
 
-const billingCycleEnum = z.enum(['Monthly', 'Quarterly', 'Yearly']);
-
-const subscriptionCreateSchema = z.object({
-  service_name: z.string().min(1, 'Service name is required'),
-  category: z.string().min(1, 'Category is required'),
-  cost: z.number().min(0, 'Cost must be a non-negative number'),
+export const subscriptionCreateSchema = z.object({
+  service_name: z.string().min(1, "Service name is required"),
+  category: z.string().min(1, "Category is required"),
+  cost: z.number().min(0, "Cost must be a non-negative number"),
   billing_cycle: billingCycleEnum,
   auto_renews: z.boolean(),
   start_date: z.string().datetime({ message: "Invalid ISO date format" }),
 });
 
-const subscriptionUpdateSchema = subscriptionCreateSchema.partial();
-
-module.exports = {
-  billingCycleEnum,
-  subscriptionCreateSchema,
-  subscriptionUpdateSchema,
-};
+export const subscriptionUpdateSchema = subscriptionCreateSchema.partial();

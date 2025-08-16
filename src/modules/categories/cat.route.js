@@ -1,35 +1,15 @@
 import express from 'express';
-import categoryController from './cat.controller.js';
-import { validate } from '../../middleware/validate.js';
-import { createCategorySchema, updateCategorySchema } from './cat.schema.js';
 import { requireAuth } from '../../middleware/auth.js';
+import categoryController from './cat.controller.js';
 
 const router = express.Router();
 
-router.post(
-    '/',
-    requireAuth,
-    validate(createCategorySchema),
-    categoryController.createCategory
-);
+// All category routes require authentication
+router.use(requireAuth);
 
-router.get(
-    '/',
-    requireAuth,
-    categoryController.getCategories
-);
-
-router.put(
-    '/:id',
-    requireAuth,
-    validate(updateCategorySchema),
-    categoryController.updateCategory
-);
-
-router.delete(
-    '/:id',
-    requireAuth,
-    categoryController.deleteCategory
-);
+router.post('/', categoryController.createCategory);
+router.get('/', categoryController.getCategories);
+router.put('/:id', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
 
 export default router;

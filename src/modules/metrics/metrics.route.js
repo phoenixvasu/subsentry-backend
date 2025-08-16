@@ -1,10 +1,19 @@
-// src/modules/metrics/metrics.route.js
-const express = require('express');
-const metricsController = require('./metrics.controller');
-const { protect } = require('../../middleware/auth'); // Assuming auth middleware is here
+import express from 'express';
+import { requireAuth } from '../../middleware/auth.js';
+import { getMetrics } from './metrics.service.js';
 
 const router = express.Router();
 
-router.get('/', protect, metricsController.getMetrics);
+// All metrics routes require authentication
+router.use(requireAuth);
 
-module.exports = router;
+router.get('/', async (req, res, next) => {
+  try {
+    const metrics = await getMetrics(req.user.id);
+    res.json(metrics);
+  } catch (error) {
+    next(error);
+  }
+});
+
+export default router;

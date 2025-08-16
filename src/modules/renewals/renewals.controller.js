@@ -1,7 +1,6 @@
 // src/modules/renewals/renewals.controller.js
-const renewalsService = require('./renewals.service');
-const { catchAsync } = require('../../utils/errors');
-const { z } = require('zod'); // Assuming Zod is available
+import { getUpcomingRenewals as serviceGetUpcomingRenewals } from "./renewals.service.js";
+import { z } from "zod";
 
 const getRenewalsSchema = z.object({
   query: z.object({
@@ -12,14 +11,13 @@ const getRenewalsSchema = z.object({
   }),
 });
 
-const getUpcomingRenewals = catchAsync(async (req, res) => {
-  const userId = req.user.id; // Assuming user ID is available from JWT middleware
-  const { withinDays } = getRenewalsSchema.parse(req).query; // Validate and parse query param
-
-  const renewals = await renewalsService.getUpcomingRenewals(userId, withinDays);
-  res.json(renewals);
-});
-
-module.exports = {
-  getUpcomingRenewals,
+export const getUpcomingRenewals = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { withinDays } = getRenewalsSchema.parse(req).query;
+    const renewals = await serviceGetUpcomingRenewals(userId, withinDays);
+    res.json(renewals);
+  } catch (error) {
+    next(error);
+  }
 };
