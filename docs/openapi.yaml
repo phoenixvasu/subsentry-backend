@@ -1,0 +1,774 @@
+openapi: 3.0.3
+info:
+  title: SubSentry API
+  description: Subscription Management API for tracking recurring expenses
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:4000/api
+    description: Development server
+  - url: https://subsentry-backend.onrender.com/api
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Subscriptions
+    description: Subscription management operations
+  - name: Categories
+    description: Category management operations
+  - name: Metrics
+    description: Financial metrics and analytics
+  - name: Renewals
+    description: Renewal tracking and notifications
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: Create a new user account with username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  maxLength: 50
+                  description: Unique username for the account
+                  example: "john_doe"
+                password:
+                  type: string
+                  minLength: 6
+                  description: Secure password for the account
+                  example: "securepass123"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User registered successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      username:
+                        type: string
+                        example: "john_doe"
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: "2025-01-15T10:30:00Z"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Conflict - username already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user
+      description: Login with username and password to get JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: Username for authentication
+                  example: "john_doe"
+                password:
+                  type: string
+                  description: Password for authentication
+                  example: "securepass123"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful"
+                  data:
+                    type: object
+                    properties:
+                      user:
+                        type: object
+                        properties:
+                          id:
+                            type: integer
+                            example: 1
+                          username:
+                            type: string
+                            example: "john_doe"
+                      token:
+                        type: string
+                        description: JWT authentication token
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        "401":
+          description: Unauthorized - invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /subscriptions:
+    get:
+      tags:
+        - Subscriptions
+      summary: Get user subscriptions
+      description: Retrieve all subscriptions for the authenticated user
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: search
+          in: query
+          description: Search term for service names
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Filter by category ID
+          required: false
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subscriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Subscriptions fetched successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Subscription"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+        "401":
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags:
+        - Subscriptions
+      summary: Create new subscription
+      description: Add a new subscription service for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - service_name
+                - cost
+                - billing_cycle
+                - category
+                - start_date
+              properties:
+                service_name:
+                  type: string
+                  description: Name of the subscription service
+                  example: "Netflix Premium"
+                cost:
+                  type: number
+                  minimum: 0
+                  description: Monthly cost of the subscription
+                  example: 799.00
+                billing_cycle:
+                  type: string
+                  enum: [Monthly, Quarterly, Yearly]
+                  description: Billing frequency
+                  example: "Monthly"
+                category:
+                  type: integer
+                  description: Category ID for the subscription
+                  example: 1
+                auto_renews:
+                  type: boolean
+                  description: Whether the subscription auto-renews
+                  default: true
+                  example: true
+                start_date:
+                  type: string
+                  format: date
+                  description: Start date of the subscription
+                  example: "2025-01-15"
+      responses:
+        "201":
+          description: Subscription created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Subscription created successfully"
+                  data:
+                    $ref: "#/components/schemas/Subscription"
+        "400":
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized - invalid or missing token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /subscriptions/{id}:
+    get:
+      tags:
+        - Subscriptions
+      summary: Get subscription by ID
+      description: Retrieve a specific subscription by its ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subscription retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Subscription fetched successfully"
+                  data:
+                    $ref: "#/components/schemas/Subscription"
+        "404":
+          description: Subscription not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - Subscriptions
+      summary: Update subscription
+      description: Update an existing subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                service_name:
+                  type: string
+                  example: "Netflix Premium"
+                cost:
+                  type: number
+                  minimum: 0
+                  example: 899.00
+                billing_cycle:
+                  type: string
+                  enum: [Monthly, Quarterly, Yearly]
+                  example: "Monthly"
+                category:
+                  type: integer
+                  example: 1
+                auto_renews:
+                  type: boolean
+                  example: true
+                start_date:
+                  type: string
+                  format: date
+                  example: "2025-01-15"
+      responses:
+        "200":
+          description: Subscription updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Subscription updated successfully"
+                  data:
+                    $ref: "#/components/schemas/Subscription"
+
+    delete:
+      tags:
+        - Subscriptions
+      summary: Delete subscription
+      description: Remove a subscription
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Subscription ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Subscription deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Subscription deleted successfully"
+
+  /categories:
+    get:
+      tags:
+        - Categories
+      summary: Get user categories
+      description: Retrieve all categories for the authenticated user
+      responses:
+        "200":
+          description: Categories retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Categories fetched successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Category"
+
+    post:
+      tags:
+        - Categories
+      summary: Create new category
+      description: Add a new category for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Category name
+                  example: "Streaming Services"
+      responses:
+        "201":
+          description: Category created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Category created successfully"
+                  data:
+                    $ref: "#/components/schemas/Category"
+
+  /categories/{id}:
+    put:
+      tags:
+        - Categories
+      summary: Update category
+      description: Update an existing category
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Category ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: "Streaming & Entertainment"
+      responses:
+        "200":
+          description: Category updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Category updated successfully"
+                  data:
+                    $ref: "#/components/schemas/Category"
+
+    delete:
+      tags:
+        - Categories
+      summary: Delete category
+      description: Remove a category (will also remove associated subscriptions)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Category ID
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Category deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Category deleted successfully"
+
+  /metrics:
+    get:
+      tags:
+        - Metrics
+      summary: Get financial metrics
+      description: Retrieve financial metrics and spending analysis for the authenticated user
+      responses:
+        "200":
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Metrics fetched successfully"
+                  data:
+                    $ref: "#/components/schemas/Metrics"
+
+  /renewals:
+    get:
+      tags:
+        - Renewals
+      summary: Get upcoming renewals
+      description: Retrieve upcoming subscription renewals within specified days
+      parameters:
+        - name: withinDays
+          in: query
+          description: Number of days to look ahead for renewals
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+      responses:
+        "200":
+          description: Renewals retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Upcoming renewals fetched successfully"
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Renewal"
+
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check
+      description: Check API health and status
+      responses:
+        "200":
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  environment:
+                    type: string
+                    example: "development"
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "john_doe"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Streaming Services"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        service_name:
+          type: string
+          example: "Netflix Premium"
+        category:
+          type: integer
+          example: 1
+        category_name:
+          type: string
+          example: "Streaming Services"
+        cost:
+          type: number
+          format: decimal
+          example: 799.00
+        billing_cycle:
+          type: string
+          enum: [Monthly, Quarterly, Yearly]
+          example: "Monthly"
+        auto_renews:
+          type: boolean
+          example: true
+        start_date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        annualized_cost:
+          type: number
+          format: decimal
+          example: 9588.00
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2025-01-15T10:30:00Z"
+
+    Metrics:
+      type: object
+      properties:
+        total_subscriptions:
+          type: integer
+          example: 5
+        total_monthly_cost:
+          type: number
+          format: decimal
+          example: 2499.00
+        total_annual_cost:
+          type: number
+          format: decimal
+          example: 29988.00
+        category_breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              category_id:
+                type: integer
+                example: 1
+              category_name:
+                type: string
+                example: "Streaming Services"
+              subscription_count:
+                type: integer
+                example: 2
+              total_cost:
+                type: number
+                format: decimal
+                example: 1598.00
+
+    Renewal:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        service_name:
+          type: string
+          example: "Netflix Premium"
+        category_name:
+          type: string
+          example: "Streaming Services"
+        cost:
+          type: number
+          format: decimal
+          example: 799.00
+        billing_cycle:
+          type: string
+          example: "Monthly"
+        next_renewal:
+          type: string
+          format: date
+          example: "2025-02-15"
+        days_until_renewal:
+          type: integer
+          example: 15
+
+    Pagination:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 3
+        totalItems:
+          type: integer
+          example: 25
+        itemsPerPage:
+          type: integer
+          example: 10
+        hasNext:
+          type: boolean
+          example: true
+        hasPrev:
+          type: boolean
+          example: false
+        nextPage:
+          type: integer
+          nullable: true
+          example: 2
+        prevPage:
+          type: integer
+          nullable: true
+          example: null
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              example: "Error message"
+            statusCode:
+              type: integer
+              example: 400
+            details:
+              type: object
+              description: Additional error details
+              nullable: true

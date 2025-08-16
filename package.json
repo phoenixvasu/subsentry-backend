@@ -1,36 +1,43 @@
 {
   "name": "subsentry-backend",
   "version": "1.0.0",
-  "description": "Backend API for SubSentry (Node.js + Express + PostgreSQL)",
-  "type": "module",
+  "description": "Backend API for SubSentry subscription management application",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
     "build": "echo 'No build step required for Node.js'",
     "db:migrate": "node scripts/dbMigrate.js",
-    "db:reset": "node scripts/dbReset.js",
+    "db:reset": "node scripts/resetDb.js",
     "db:seed": "node scripts/seedRealData.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "date-fns": "^3.6.0",
-    "dotenv": "^16.4.5",
-    "express": "^4.19.2",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "helmet": "^7.0.0",
+    "js-yaml": "^4.1.0",
+    "jsonwebtoken": "^9.0.0",
     "morgan": "^1.10.0",
-    "node-fetch": "^3.3.2",
-    "pg": "^8.16.3",
-    "zod": "^3.25.76"
+    "pg": "^8.11.0",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.0.0"
   },
-  "jest": {
-    "testEnvironment": "node",
-    "verbose": true,
-    "transform": {}
-  }
+  "keywords": [
+    "subscription",
+    "management",
+    "api",
+    "nodejs",
+    "express",
+    "postgresql"
+  ],
+  "author": "SubSentry Team",
+  "license": "MIT"
 }

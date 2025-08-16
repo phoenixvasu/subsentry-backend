@@ -4,6 +4,7 @@ import categoryRoutes from "./modules/categories/cat.route.js";
 import subscriptionRoutes from "./modules/subscriptions/sub.route.js";
 import metricsRoutes from "./modules/metrics/metrics.route.js";
 import renewalsRoutes from "./modules/renewals/renewals.route.js"; // Add this line
+import { swaggerMiddleware } from "./swagger.js";
 
 const router = express.Router();
 
@@ -27,6 +28,9 @@ router.get("/health", (req, res) => {
       : [],
   });
 });
+
+// API Documentation
+router.use("/docs", swaggerMiddleware);
 
 router.use("/auth", authRoutes);
 router.use("/categories", categoryRoutes);
