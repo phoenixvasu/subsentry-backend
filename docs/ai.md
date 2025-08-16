@@ -1,4 +1,4 @@
-Prompt
+Prompt-1
 
 You are coding inside an existing Node.js + Express backend project with PostgreSQL using the pg Pool library.
 
@@ -83,3 +83,90 @@ Error Handling → Added duplicate username handling without crashing the server
 Testing → Added src/tests/auth.test.js with Supertest to test /auth/register endpoint
 
 Best Practices → Used async/await, proper error handling, and clean code structure throughout
+
+
+Context:
+We are implementing the subscriptions module in SubSentry. Requirements:
+
+Zod schema for create/update:
+
+{
+  service_name: string,
+  category: string,
+  cost: number >= 0,
+  billing_cycle: enum('Monthly','Quarterly','Yearly'),
+  auto_renews: boolean,
+  start_date: string (ISO)
+}
+
+
+Annualized cost calculation in service layer:
+
+Monthly → cost × 12
+
+Quarterly → cost × 4
+
+Yearly → cost
+
+CRUD Endpoints (all protected via JWT auth):
+
+POST /api/subscriptions → creates subscription, stores annualized_cost, returns full object
+
+PUT /api/subscriptions/:id → updates subscription, recalculates annualized_cost
+
+DELETE /api/subscriptions/:id → removes subscription
+
+Listing Endpoint:
+
+GET /api/subscriptions with query params:
+
+page, limit (pagination with sane caps, e.g., 5–50)
+
+category, billingCycle (filters)
+
+search (case-insensitive ILIKE on service_name)
+
+sortBy (safe format: field_order, e.g. annualizedCost_desc)
+
+Return: { items, page, limit, total, totalPages }
+
+Follow existing repo/service/controller pattern of the project.
+
+Ensure safe parameterized SQL with pg (no string concatenation).
+
+Exclude test scaffolding (no Jest/Supertest).
+
+Prompt:
+“Implement the full subscriptions module in our Node.js + Express + PostgreSQL project with Zod validation, repo/service/controller structure, and JWT-protected routes.
+
+Define a Zod schema for create/update with required fields.
+
+Add an annualized cost calculator in the service layer.
+
+Implement CRUD routes (POST, PUT, DELETE) storing/recomputing annualized_cost.
+
+Add listing route (GET /api/subscriptions) supporting pagination, filters (category, billing_cycle), case-insensitive search (ILIKE on service_name), and safe sorting (safelist fields including annualized_cost).
+
+Use CTE for total count in pagination.
+
+Cap limit between 5–50.
+
+Follow the existing repo/service pattern of the project.
+
+Do not generate any tests.”
+
+Changes Applied:
+
+Added Zod schema for subscriptions create/update DTO.
+
+Implemented annualized cost computation in service layer.
+
+Added CRUD endpoints for subscriptions with recalculated annualized cost.
+
+Created listing endpoint with pagination, filters, case-insensitive search, and safelisted sort fields.
+
+Adopted CTE-based total count for efficient pagination.
+
+Enforced limit capping (5–50) to prevent abuse.
+
+All routes integrated with existing JWT auth middleware and follow current project structure.
