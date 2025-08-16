@@ -39,7 +39,7 @@ export function nextRenewalDate(startDate, billingCycle) {
 }
 
 export async function getUpcomingRenewals(userId, withinDays) {
-  const { items: subscriptions } = await listSubscriptions(userId, {});
+  const subscriptions = await listSubscriptions(userId, {});
   const today = startOfDay(new Date());
   const cutoffDate = addDays(today, withinDays);
   const upcomingRenewals = [];
@@ -56,6 +56,7 @@ export async function getUpcomingRenewals(userId, withinDays) {
           id: sub.id,
           service_name: sub.service_name,
           billing_cycle: sub.billing_cycle,
+          annualized_cost: sub.annualized_cost,
           nextRenewalDate: renewalDate.toISOString(),
         });
       }

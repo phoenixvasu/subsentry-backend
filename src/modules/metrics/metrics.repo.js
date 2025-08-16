@@ -9,13 +9,13 @@ export async function getMetrics(userId) {
       SELECT 
         COALESCE(SUM(
           CASE 
-            WHEN billing_cycle = 'Monthly' THEN cost
-            WHEN billing_cycle = 'Yearly' THEN cost / 12
-            WHEN billing_cycle = 'Quarterly' THEN cost / 3
+            WHEN billing_cycle = 'Monthly' THEN CAST(cost AS NUMERIC)
+            WHEN billing_cycle = 'Yearly' THEN CAST(cost AS NUMERIC) / 12
+            WHEN billing_cycle = 'Quarterly' THEN CAST(cost AS NUMERIC) / 3
             ELSE 0
           END
         ), 0) as totalmonthlycost,
-        COALESCE(SUM(annualized_cost), 0) as totalannualizedcost,
+        COALESCE(SUM(CAST(annualized_cost AS NUMERIC)), 0) as totalannualizedcost,
         COUNT(*) as totalsubscriptions
       FROM subscriptions 
       WHERE user_id = $1

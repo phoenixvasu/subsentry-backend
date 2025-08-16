@@ -106,9 +106,22 @@ export const getSubscriptionById = async (id, userId) => {
   const client = await getPool().connect();
   try {
     const result = await client.query(
-      `SELECT ${SUBSCRIPTION_FIELDS.join(
-        ", "
-      )} FROM subscriptions WHERE id = $1 AND user_id = $2`,
+      `SELECT 
+        s.id,
+        s.user_id,
+        s.service_name,
+        s.category,
+        s.cost,
+        s.billing_cycle,
+        s.auto_renews,
+        s.start_date,
+        s.annualized_cost,
+        s.created_at,
+        s.updated_at,
+        c.name as category_name
+      FROM subscriptions s
+      LEFT JOIN categories c ON s.category = c.id
+      WHERE s.id = $1 AND s.user_id = $2`,
       [id, userId]
     );
     return result.rows[0];
@@ -121,18 +134,35 @@ export async function listSubscriptions(userId, options = {}) {
   const pool = getPool();
   const client = await pool.connect();
   try {
-    let query = 'SELECT * FROM subscriptions WHERE user_id = $1';
+    let query = `
+      SELECT 
+        s.id,
+        s.user_id,
+        s.service_name,
+        s.category,
+        s.cost,
+        s.billing_cycle,
+        s.auto_renews,
+        s.start_date,
+        s.annualized_cost,
+        s.created_at,
+        s.updated_at,
+        c.name as category_name
+      FROM subscriptions s
+      LEFT JOIN categories c ON s.category = c.id
+      WHERE s.user_id = $1
+    `;
     const params = [userId];
-    
+
     if (options.status) {
-      query += ' AND status = $2';
+      query += " AND s.status = $2";
       params.push(options.status);
     }
-    
-    query += ' ORDER BY start_date DESC';
-    
+
+    query += " ORDER BY s.start_date DESC";
+
     const result = await client.query(query, params);
-    return { items: result.rows };
+    return result.rows; // Return array directly
   } finally {
     client.release();
   }
